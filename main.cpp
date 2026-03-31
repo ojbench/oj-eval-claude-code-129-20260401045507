@@ -252,18 +252,22 @@ int main() {
                 resultVar->value = val1 + val2;
             }
             else {
-                // For strings, need to handle aliasing carefully
-                // Read both values first before modifying
-                const string& str1 = get<string>(value1Var->value);
-                const string& str2 = get<string>(value2Var->value);
-
-                // Create temporary copies if needed
-                if (resultVar == value1Var || resultVar == value2Var) {
-                    string temp1 = str1;
-                    string temp2 = str2;
-                    resultVar->value = temp1 + temp2;
+                // For strings, handle aliasing with in-place operations when possible
+                if (resultVar == value1Var && resultVar == value2Var) {
+                    // All three are the same: a = a + a, need to double the string
+                    string temp = get<string>(resultVar->value);
+                    get<string>(resultVar->value) = temp + temp;
+                } else if (resultVar == value1Var) {
+                    // result is value1, just append value2
+                    get<string>(resultVar->value) += get<string>(value2Var->value);
+                } else if (resultVar == value2Var) {
+                    // result is value2, prepend value1
+                    string temp = get<string>(value1Var->value);
+                    temp += get<string>(resultVar->value);
+                    resultVar->value = move(temp);
                 } else {
-                    resultVar->value = str1 + str2;
+                    // result is different from both, just concatenate
+                    resultVar->value = get<string>(value1Var->value) + get<string>(value2Var->value);
                 }
             }
         }

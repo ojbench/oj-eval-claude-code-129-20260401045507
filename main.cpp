@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include <variant>
 #include <sstream>
+#include <cstring>
 
 using namespace std;
 
@@ -61,11 +62,8 @@ public:
 };
 
 // Parse string value (remove quotes)
-// Returns empty string and sets valid to false if invalid
-string parseStringValue(const string& s, bool& valid) {
-    valid = false;
+string parseStringValue(const string& s) {
     if (s.length() >= 2 && s[0] == '"' && s[s.length()-1] == '"') {
-        valid = true;
         return s.substr(1, s.length() - 2);
     }
     return "";
@@ -156,9 +154,8 @@ int main() {
                     continue;
                 }
 
-                bool valid;
-                string value = parseStringValue(valueStr, valid);
-                if (!valid || !manager.declare(type, name, value)) {
+                string value = parseStringValue(valueStr);
+                if (!manager.declare(type, name, value)) {
                     cout << invalid_msg;
                 }
             }
@@ -219,12 +216,7 @@ int main() {
                     continue;
                 }
 
-                bool valid;
-                string addValue = parseStringValue(valueStr, valid);
-                if (!valid) {
-                    cout << invalid_msg;
-                    continue;
-                }
+                string addValue = parseStringValue(valueStr);
                 // Append directly to avoid creating a new string
                 get<string>(var->value) += addValue;
             }

@@ -225,12 +225,6 @@ int main() {
             string result, value1Name, value2Name;
             iss >> result >> value1Name >> value2Name;
 
-            // Validate that all names are provided and valid
-            if (result.empty() || value1Name.empty() || value2Name.empty()) {
-                cout << invalid_msg;
-                continue;
-            }
-
             Variable* resultVar = manager.findVariable(result);
             Variable* value1Var = manager.findVariable(value1Name);
             Variable* value2Var = manager.findVariable(value2Name);
@@ -252,23 +246,12 @@ int main() {
                 resultVar->value = val1 + val2;
             }
             else {
-                // For strings, handle aliasing with in-place operations when possible
-                if (resultVar == value1Var && resultVar == value2Var) {
-                    // All three are the same: a = a + a, need to double the string
-                    string temp = get<string>(resultVar->value);
-                    get<string>(resultVar->value) = temp + temp;
-                } else if (resultVar == value1Var) {
-                    // result is value1, just append value2
-                    get<string>(resultVar->value) += get<string>(value2Var->value);
-                } else if (resultVar == value2Var) {
-                    // result is value2, prepend value1
-                    string temp = get<string>(value1Var->value);
-                    temp += get<string>(resultVar->value);
-                    resultVar->value = move(temp);
-                } else {
-                    // result is different from both, just concatenate
-                    resultVar->value = get<string>(value1Var->value) + get<string>(value2Var->value);
-                }
+                // For strings, create result string before assigning
+                // This handles aliasing correctly since we create a new string first
+                const string& s1 = get<string>(value1Var->value);
+                const string& s2 = get<string>(value2Var->value);
+                string result = s1 + s2;
+                resultVar->value = move(result);
             }
         }
     }
